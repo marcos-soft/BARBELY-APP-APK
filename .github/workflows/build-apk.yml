@@ -1,16 +1,11 @@
 name: Generar APK de Barbely
 
-on:
-push:
-branches:
-- main
-workflow_dispatch:
+on: push: branches: - main workflow_dispatch:
 
 permissions:
 contents: read
 
-jobs:
-build-apk:
+jobs: build-apk:
 name: Compilar APK Android
 runs-on: ubuntu-latest
 timeout-minutes: 40
