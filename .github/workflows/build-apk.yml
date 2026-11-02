@@ -1,66 +1,67 @@
 name: Generar APK de Barbely
 
-on: push: branches: - main workflow_dispatch:
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
-contents: read
+  contents: read
 
-jobs: build-apk:
-name: Compilar APK Android
-runs-on: ubuntu-latest
-timeout-minutes: 40
+jobs:
+  build-apk:
+    name: Compilar APK Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
 
-steps:
-  - name: Descargar código
-    uses: actions/checkout@v4
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
 
-  - name: Configurar Java 17
-    uses: actions/setup-java@v4
-    with:
-      distribution: temurin
-      java-version: '17'
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-  - name: Configurar Gradle
-    uses: gradle/actions/setup-gradle@v4
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
 
-  - name: Extraer proyecto Barbely
-    run: |
-      if [ -f "Barbely-Android-Correccion-Correos.zip" ]; then
-        ZIP_FILE="Barbely-Android-Correccion-Correos.zip"
-      else
-        ZIP_FILE=$(find . -maxdepth 2 -type f -name "*.zip" | head -n 1)
-      fi
+      - name: Extraer proyecto Barbely
+        run: |
+          ZIP_FILE=$(find . -maxdepth 2 -type f -name "*.zip" | head -n 1)
 
-      if [ -z "$ZIP_FILE" ]; then
-        echo "ERROR: No se encontró el ZIP del proyecto."
-        exit 1
-      fi
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ERROR: No se encontro el ZIP del proyecto."
+            exit 1
+          fi
 
-      mkdir -p /tmp/barbely
-      unzip -q "$ZIP_FILE" -d /tmp/barbely
+          mkdir -p /tmp/barbely
+          unzip -q "$ZIP_FILE" -d /tmp/barbely
 
-      GRADLEW=$(find /tmp/barbely -type f -name gradlew | head -n 1)
+          GRADLEW=$(find /tmp/barbely -type f -name gradlew | head -n 1)
 
-      if [ -z "$GRADLEW" ]; then
-        echo "ERROR: No se encontró gradlew."
-        exit 1
-      fi
+          if [ -z "$GRADLEW" ]; then
+            echo "ERROR: No se encontro gradlew."
+            exit 1
+          fi
 
-      PROJECT_DIR=$(dirname "$GRADLEW")
-      echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          PROJECT_DIR=$(dirname "$GRADLEW")
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
-  - name: Compilar APK
-    run: |
-      cd "$PROJECT_DIR"
-      chmod +x gradlew
-      ./gradlew --no-daemon assembleDebug assembleRelease
+      - name: Compilar APK
+        run: |
+          cd "$PROJECT_DIR"
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug assembleRelease
 
-  - name: Guardar APK
-    uses: actions/upload-artifact@v4
-    with:
-      name: Barbely-APK-Android
-      path: |
-        ${{ env.PROJECT_DIR }}/app/build/outputs/apk/debug/app-debug.apk
-        ${{ env.PROJECT_DIR }}/app/build/outputs/apk/release/app-release.apk
-      if-no-files-found: error
-      retention-days: 14
+      - name: Guardar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Barbely-APK-Android
+          path: |
+            ${{ env.PROJECT_DIR }}/app/build/outputs/apk/debug/app-debug.apk
+            ${{ env.PROJECT_DIR }}/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
